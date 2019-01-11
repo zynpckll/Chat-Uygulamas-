@@ -1,0 +1,242 @@
+<html ng-app="home">
+  <head>
+	<title>Chat Uygulaması</title>
+	<link rel="stylesheet" href="css/bootstrap.min.css">
+	<link rel="stylesheet" href="css/font-awesome.min.css">
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="angularjs-toaster/toaster.min.css" />
+
+  </head>
+  <body ng-controller="home">
+	<div class="body">
+
+		<div class="rows">
+
+			<div class="col-md-8 msg-wrapper">
+
+				<!--
+					Kullanıcılarla konuşan kişinin gösterilmesi başlangıç
+				-->
+				<div class="msg-wrapper-header">
+					<div class="chat-user-meta">
+				  		<span class="user-name">{{send_to_user_name=='' ? 'Kullanıcı Seçiniz': send_to_user_name}} </span>
+					</div>
+			  	</div>
+			  	<!--
+					Kullanıcılarla konuşan kişinin gösterilmesi bitiş
+				-->
+
+			  	<div class="msg-wrapper-body">
+			  		<!--
+						Kullanıcıların başlamasıyla mesajarın gösterilmesi başlangıç
+					-->
+					<div class="msg-container" id="msg-container">
+				  		<div class="msg-single" ng-repeat="msg_data in msgs"
+							ng-style="{
+						  		'float': uid==msg_data.to_id ? 'left' :'right'
+							}">
+					  		<div class="msg-conatiner">
+								<div class="actual-msg">{{msg_data.msg}}</div>
+								<span class="msg-meta">{{msg_data.timestamp*1000 | date}}</span>
+					  		</div>
+				  		</div>
+					</div>
+					<!--
+						Kullanıcıların başlamasıyla mesajarın gösterilmesi bitiş
+					-->
+
+					<!--
+						Mesaj göndermek için kısım başlangıç
+					-->
+					<div class="send-container">
+				 		<textarea class="form-control send-msg-text" ng-model='send_text' send-typing-notification placeholder="Mesajınızı buraya yazınız" ></textarea>
+				  		<h1 class="send-btn" ng-click="send_msg('','','')"><span class="glyphicon glyphicon-send"></span></h1>
+					</div>
+					<!--
+						Mesaj göndermek için kısım bitiş
+					-->
+			  	</div>
+			</div>
+
+			<div class="col-md-4  list-wrapper">
+
+				<!--
+					Konuşma listesi göster başlangıç
+				-->
+				<div class="col-md-12 list-wrapper-header">
+
+					<!--
+						Profil fotoğrafının gösterilmesi
+					-->
+					<div class="profile_pic">
+						<img class="img-circle" ng-src="{{show_userinfo.data.p_photo}}">
+					</div>
+					<!--
+						Modal ve çıkış için link başlangıç
+					-->
+					<div class="icon-set">
+            <!--<a Title="Yeni Konuşmaya Başla" ng-click='get_users_to_chats()' data-toggle="modal" data-target="#myModal">
+							<span class="glyphicon glyphicon-plus"></span>
+						</a>-->
+						<a Title="Çıkış" href="/logout">
+							<span class="glyphicon glyphicon-off"></span>
+						</a>
+					</div>
+					<!--
+						Modal ve çıkış için link bitiş
+					-->
+
+					<!--
+						Çevrimiçi durumunun gösterilmesi
+					-->
+					<div class="user-meta">
+						<span class="user-name">{{show_userinfo.data.name}}</span>
+						<span class="user-status">{{show_userinfo.data.online=='Y' ? 'Çevrimiçi': 'Çevrimdışı' }}</span>
+					</div>
+				</div>
+
+				<!--
+					Konuşma listesinin gösterilmesi başlangıç
+				-->
+				<div class="userlist">
+
+					<!--
+						Kullanıcıları göstermek için ng-repeat kullanılması başlangıç
+					-->
+					<div class="userlist-single" ng-repeat="singleuser in userlist"
+						ng-click="hightlight_user(singleuser)"
+					  	ng-class="(hightlight_id==singleuser.id ? 'hightlight_user_class' :'')"
+					  	ng-style="{
+							'display': uid==singleuser.id ? 'none' :''
+						}">
+						<!--
+							Kullanıcının adı, resmi ve online olma durumunun gösterilmesi
+						-->
+						<div class="userlist-user-meta">
+							<img class="img-circle" ng-src="{{singleuser.p_photo}}"/>
+								<span class="online-user-status"
+						  			ng-class="(singleuser.online=='Y' ? 'status-online' :'status-offline')"
+								></span>
+							<span title="{{singleuser.socketId}}" class="userlist-userName">{{singleuser.name}}</span>
+							<!--
+								'Yazıyor' bildirimi için span
+							-->
+							<span id="isTyping_{{singleuser.id}}" class="is-typing">yazıyor...</span>
+						</div>
+					</div>
+					<!--
+						Kullanıcıları göstermek için ng-repeat kullanılması bitiş
+					-->
+
+					<!--
+						Konuşma için hiç uygun kullnıcı olmadığının gösterilmesi
+					-->
+					<div ng-show="userlist.length == 1 && userlist[0].name==show_userinfo.data.name"  >
+						<div class="alert alert-danger" >
+						  <p class="text-center" >
+							Herkes çevrimdışı.
+							<br/><br/>
+							Bu linki paylaşıp arkadaşlarınıza online olmalarını söyleyin.
+						  </p >
+						</div >
+					</div>
+
+				</div>
+				<!--
+					Konuşma listesinin gösterilmesi bitiş
+				-->
+			</div>
+		</div>
+	</div>
+
+	<!--
+		Toaster uyarısı için HTML elementi başlangıç
+	-->
+	<toaster-container></toaster-container>
+	<!--
+		Toaster uyarısı için HTML elementi bitiş
+	-->
+
+	<!--
+		Bootstrap modal başlangıç
+	-->
+	<div id="myModal" class="modal fade" role="dialog">
+		<div class="modal-dialog">
+
+		<!-- Modal content başlangıç-->
+		<div class="modal-content">
+
+			<!-- Modal header başlangıç-->
+			<div class="modal-header">
+				<a type="button" class="close" data-dismiss="modal">&times;</a>
+				<p class="modal-title">Yeni konuşma başlat</p>
+			</div>
+			<!-- Modal header bitiş-->
+
+
+			<!-- Modal Body başlangıç-->
+			<div class="modal-body">
+
+				<!--
+					Yeni konuşmaya başlama listesinin gösterilmesi başlangıç
+				-->
+				<div class="newChat" ng-repeat="singleOfflineUser in RecentUserList"
+					ng-class="(hightlight_id==singleOfflineUser.id ? 'hightlight_user_class' :'')"
+					id='modal_user_{{singleOfflineUser.id}}'
+					>
+
+					<div class="userlist-user-meta">
+						<!--
+							Kullanıcı detaylarının gösterilmesi başlangıç
+						-->
+						<div class="newChat-user-meta">
+							<img class="img-circle" ng-src="{{singleOfflineUser.p_photo}}">
+							<span class="userlist-userName">{{singleOfflineUser.name}}</span>
+							<span class="send-msg-offline sendButton{{singleOfflineUser.id}}">
+								<span class="glyphicon glyphicon-plus showMSgBox_{{singleOfflineUser.id}}" ng-click="hideShowMsgBox(singleOfflineUser.id,'show',$event)"></span>
+								<span class="glyphicon glyphicon-minus hideMsgBox_{{singleOfflineUser.id}} send-msg-hidden" ng-click="hideShowMsgBox(singleOfflineUser.id,'hide',$event)"></span>
+							</span>
+						</div>
+						<!--
+							Kullanıcı detaylarının gösterilmesi bitişi
+						-->
+
+						<!--
+							Mesaj göndermek için alan başlangıç
+						-->
+						<div class="send-msg-offline-text send-msg-hidden collapseMsgBox_{{singleOfflineUser.id}}">
+							<textarea id="msg_modal_{{singleOfflineUser.id}}" class="form-control" ng-model='send_text' placeholder="Mesajınızı buraya yazınız"></textarea>
+							<button class="btn btn-primary newChat-send-mesaage" data-dismiss="modal" ng-click="send_msg('fromModal','',singleOfflineUser.id)">
+								mesaj gönder
+							</button>
+						</div>
+						<!--
+							Mesaj göndermek için alan bitiş
+						-->
+					</div>
+				</div>
+				<!--
+					Yeni konuşmaya başlama listesinin gösterilmesi bitiş
+				-->
+
+		  	</div>
+		  	<!-- Modal Body bitişi -->
+
+		</div>
+		<!-- Modal content bitişi -->
+	  </div>
+	</div>
+	<!--
+		Bootstrap modal bitişi
+	-->
+
+	<script type="text/javascript" src="js/jquery.min.js"></script>
+	<script type="text/javascript" src="js/bootstrap.min.js"></script>
+	<script type="text/javascript" src = "js/angular.min.js"></script>
+	<script type="text/javascript" src="js/angular-animate.min.js" ></script>
+	<script type="text/javascript" src="angularjs-toaster/toaster.min.js"></script>
+	<script type="text/javascript" src="/socket.io/socket.io.js"></script>
+	<script type="text/javascript" src ="js/home_script.js"></script>
+
+  </body>
+</html>
